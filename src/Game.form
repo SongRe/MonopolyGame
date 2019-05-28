@@ -26,7 +26,7 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="gamePanel" alignment="0" pref="789" max="32767" attributes="0"/>
+          <Component id="gamePanel" alignment="0" pref="1000" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
@@ -59,11 +59,15 @@
                           <Component id="turn" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="turnStatus" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="-2" pref="60" max="-2" attributes="0"/>
+                          <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="tileDisplay" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="32767" attributes="0"/>
                           <Component id="dieBtn" min="-2" max="-2" attributes="0"/>
                       </Group>
                   </Group>
-                  <EmptySpace min="0" pref="169" max="32767" attributes="0"/>
+                  <EmptySpace pref="380" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -72,11 +76,15 @@
               <Group type="102" alignment="0" attributes="0">
                   <Component id="board" min="-2" pref="620" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
-                  <Group type="103" groupAlignment="3" attributes="0">
-                      <Component id="dieBtn" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="0" attributes="0">
                       <Component id="dieLabel" alignment="0" min="-2" pref="100" max="-2" attributes="0"/>
-                      <Component id="turn" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="turnStatus" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="dieBtn" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="turn" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="turnStatus" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel1" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="tileDisplay" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
                   </Group>
                   <EmptySpace pref="42" max="32767" attributes="0"/>
               </Group>
@@ -111,6 +119,19 @@
           </Properties>
         </Component>
         <Component class="javax.swing.JLabel" name="turnStatus">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="status"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel1">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Tile Name:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="tileDisplay">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="tileDisplay"/>
+          </Properties>
         </Component>
       </SubComponents>
     </Container>

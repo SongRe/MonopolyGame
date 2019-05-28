@@ -3,26 +3,37 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+
 import java.awt.Graphics;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.MouseInfo;
 import java.awt.PointerInfo;
+
 /**
  *
  * @author 335554069
  */
 public class Game extends javax.swing.JFrame {
-    
+
     Graphics g;
-    int totalPlayers = 4; 
-    int[] curPos = {0,0,0,0};               //create curPos value for players 1,2,3,4
-    int curPlayer = 1; 
- 
+    int totalPlayers = 4;
+
+    public void setPlayers(int numPlayers) {
+        totalPlayers = numPlayers;
+    }
+
+    int[] curPos = {0, 0, 0, 0};               //create curPos value for players 1,2,3,4, where curPos[0] = player 1
+    int curPlayer = 1;
+
     int[] xC = {562, 562, 562, 562, 562, 562, 390, 315, 240, 165, 20, 20, 20, 20, 20, 20, 165, 240, 315, 390};
     int[] yC = {570, 440, 365, 290, 215, 48, 48, 48, 48, 48, 48, 225, 300, 375, 450, 588, 588, 588, 588, 588};
-    
-   
+    int[] prices = {0, 100, 120, 0, 150, 0, 200, 220, 0, 250, 0, 300, 320, 0, 350, 0, 400, 420, 0, 500};
+    int[] owner = {5, 0, 0, 5, 0, 5, 0, 0, 5, 0, 5, 0, 0, 5, 0, 5, 0, 0, 5, 0};
+    int[] rent = {0, 50, 60, 0, 75, 0, 100, 110, 0, 125, 0, 150, 160, 0, 175, 0, 200, 210, 0, 250};
+    int[] balance = {750, 750, 750, 750};
+    String[] tileName = {"Start", "Pluto", "Hoth", "Community Chest", "Titan", "Jail", "Tatooine", "Naboo", "Chance", "Neptune", "Free Refuel", "Uranus", "Xena", "Community Chest", "Mars", "Go to Jail", "Jupiter", "Venus", "Chance", "Earth"};
+
     /**
      * Creates new form Game
      */
@@ -31,7 +42,7 @@ public class Game extends javax.swing.JFrame {
         g = gamePanel.getGraphics();
         //draw board
         board.setIcon(new javax.swing.ImageIcon(getClass().getResource("board.png")));
-       
+
     }
 
     /**
@@ -49,6 +60,8 @@ public class Game extends javax.swing.JFrame {
         dieLabel = new javax.swing.JLabel();
         turn = new javax.swing.JLabel();
         turnStatus = new javax.swing.JLabel();
+        jLabel1 = new javax.swing.JLabel();
+        tileDisplay = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setPreferredSize(new java.awt.Dimension(670, 670));
@@ -77,6 +90,12 @@ public class Game extends javax.swing.JFrame {
 
         turn.setText("Turn: ");
 
+        turnStatus.setText("status");
+
+        jLabel1.setText("Tile Name:");
+
+        tileDisplay.setText("tileDisplay");
+
         javax.swing.GroupLayout gamePanelLayout = new javax.swing.GroupLayout(gamePanel);
         gamePanel.setLayout(gamePanelLayout);
         gamePanelLayout.setHorizontalGroup(
@@ -91,20 +110,27 @@ public class Game extends javax.swing.JFrame {
                         .addComponent(turn)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(turnStatus)
+                        .addGap(60, 60, 60)
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(tileDisplay)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(dieBtn)))
-                .addGap(0, 169, Short.MAX_VALUE))
+                .addContainerGap(380, Short.MAX_VALUE))
         );
         gamePanelLayout.setVerticalGroup(
             gamePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(gamePanelLayout.createSequentialGroup()
                 .addComponent(board, javax.swing.GroupLayout.PREFERRED_SIZE, 620, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(gamePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(dieBtn)
+                .addGroup(gamePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(dieLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(turn)
-                    .addComponent(turnStatus))
+                    .addGroup(gamePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(dieBtn)
+                        .addComponent(turn)
+                        .addComponent(turnStatus)
+                        .addComponent(jLabel1)
+                        .addComponent(tileDisplay)))
                 .addContainerGap(42, Short.MAX_VALUE))
         );
 
@@ -112,7 +138,7 @@ public class Game extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(gamePanel, javax.swing.GroupLayout.DEFAULT_SIZE, 789, Short.MAX_VALUE)
+            .addComponent(gamePanel, javax.swing.GroupLayout.DEFAULT_SIZE, 1000, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -122,98 +148,101 @@ public class Game extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void gamePanelMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_gamePanelMouseEntered
+        // TODO add your handling code here:
+    }//GEN-LAST:event_gamePanelMouseEntered
+
     private void dieBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dieBtnActionPerformed
         int dieValue;
-        switch (curPlayer) {
-        
+        turnStatus.setText("Player " + curPlayer);
+        switch (curPlayer) {                //move players
+
             case 1:
-                
                 g.setColor(Color.white);
                 g.fillOval(xC[curPos[0]], yC[curPos[0]], 10, 10); //erase player 1
-        
-                dieValue = (int) (Math.random() * 6) + 1;
-                showDie(dieValue);
-                curPos[0]+= dieValue;
-                
-                if(curPos[0] > 19) {
+
+                dieValue = (int) (Math.random() * 6) + 1;       //generate random val from 1 to 6
+
+                showDie(dieValue);              //show die value
+                curPos[0] += dieValue;           //change player1's position
+
+                if (curPos[0] > 19) {            //if the player's position exceeds position 19 (last pos)
                     curPos[0] -= 20;            //subtract 20 (position 20 = position 1, which in the array is 19 = 0)
                 }
-        
+                displayName(curPos[0]);
+
                 g.setColor(Color.blue); //draw player 1
                 g.fillOval(xC[curPos[0]], yC[curPos[0]], 10, 10);
                 
-                curPlayer = 2;
-            break;
-                
+                curPlayer = 2;                  //next player's turn
+                break;
+
             case 2: //10 pixel offset
                 g.setColor(Color.white);
                 g.fillOval(xC[curPos[1]] + 8, yC[curPos[1]] - 7, 10, 10); //erase player 2
-                
+
                 dieValue = (int) (Math.random() * 6) + 1;
                 showDie(dieValue);
                 curPos[1] += dieValue;
-                if(curPos[1] > 19) {                
-                    curPos[1] -= 20;             
+                if (curPos[1] > 19) {
+                    curPos[1] -= 20;
                 }
+                displayName(curPos[1]);
                 g.setColor(Color.red); //draw player 2
                 g.fillOval(xC[curPos[1]] + 8, yC[curPos[1]] - 7, 10, 10);
-                
-            
-                if(totalPlayers >= 3) {
+
+                //go to next player
+                if (totalPlayers >= 3) {
                     curPlayer = 3;
                 } else {
                     curPlayer = 1;
                 }
                 break;
-            
-                
+
             case 3: //20 pixel offset
                 g.setColor(Color.white);
                 g.fillOval(xC[curPos[2]] + 18, yC[curPos[2]] - 17, 10, 10); //erase player 2
-                
+
                 dieValue = (int) (Math.random() * 6) + 1;
                 showDie(dieValue);
                 curPos[2] += dieValue;
-                if(curPos[2] > 19) {                
-                    curPos[2] -= 20;             
+                if (curPos[2] > 19) {
+                    curPos[2] -= 20;
                 }
+                displayName(curPos[2]);
                 g.setColor(Color.green); //draw player 3
                 g.fillOval(xC[curPos[2]] + 18, yC[curPos[2]] - 17, 10, 10);
-                if(totalPlayers >= 4) {
+                if (totalPlayers >= 4) {
                     curPlayer = 4;
                 } else {
                     curPlayer = 1;
                 }
                 break;
-            
-            case 4:
+
+            case 4://30 pixel offset
                 g.setColor(Color.white);
                 g.fillOval(xC[curPos[3]] + 28, yC[curPos[3]] - 27, 10, 10); //erase player 4
-                
+
                 dieValue = (int) (Math.random() * 6) + 1;
                 showDie(dieValue);
                 curPos[3] += dieValue;
-                if(curPos[3] > 19) {                
-                    curPos[3] -= 20;             
+                if (curPos[3] > 19) {
+                    curPos[3] -= 20;
                 }
+                displayName(curPos[3]);
                 g.setColor(Color.orange); //draw player 4
                 g.fillOval(xC[curPos[3]] + 28, yC[curPos[3]] - 27, 10, 10); //draw player 4
-                
-                
+
                 curPlayer = 1;
-                
+
                 break;
-        
+
         }
     }//GEN-LAST:event_dieBtnActionPerformed
 
     private void boardMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_boardMouseEntered
 
     }//GEN-LAST:event_boardMouseEntered
-
-    private void gamePanelMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_gamePanelMouseEntered
-        // TODO add your handling code here:
-    }//GEN-LAST:event_gamePanelMouseEntered
 
     /**
      * @param args the command line arguments
@@ -248,9 +277,20 @@ public class Game extends javax.swing.JFrame {
                 new Game().setVisible(true);
             }
         });
-        
-        
+
     }
+    public void displayName(int curPos) {
+        tileDisplay.setText(tileName[curPos]);
+    }
+    
+    
+    public void landedProperty(int curPlayer, int curPos) {
+        int playerIndex = curPlayer -1;
+        if(owner[curPos] == 0) {
+            
+        }
+    }
+
     public void showDie(int dieValue) {
         switch (dieValue) {
             case 1:
@@ -265,7 +305,7 @@ public class Game extends javax.swing.JFrame {
             case 4:
                 dieLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("4.png")));
                 break;
-            case 5: 
+            case 5:
                 dieLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("5.png")));
                 break;
             case 6:
@@ -273,15 +313,15 @@ public class Game extends javax.swing.JFrame {
                 break;
         }
     }
-        
-    
-    
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel board;
     private javax.swing.JButton dieBtn;
     private javax.swing.JLabel dieLabel;
     private javax.swing.JPanel gamePanel;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel tileDisplay;
     private javax.swing.JLabel turn;
     private javax.swing.JLabel turnStatus;
     // End of variables declaration//GEN-END:variables
