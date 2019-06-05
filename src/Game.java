@@ -9,15 +9,22 @@ import java.awt.Color;
 import java.awt.Point;
 import java.awt.MouseInfo;
 import java.awt.PointerInfo;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Arrays;
+import javax.swing.Timer;
+import javax.swing.JOptionPane;
 
 /**
  *
  * @author 335554069
  */
-public class Game extends javax.swing.JFrame {
-
+public final class Game extends javax.swing.JFrame {
+    
     Graphics g;
-    int totalPlayers = 4;
+    Timer t;
+    
+    int totalPlayers = 2;                               //two players by default
 
     public void setPlayers(int numPlayers) {
         totalPlayers = numPlayers;
@@ -28,21 +35,27 @@ public class Game extends javax.swing.JFrame {
 
     int[] xC = {562, 562, 562, 562, 562, 562, 390, 315, 240, 165, 20, 20, 20, 20, 20, 20, 165, 240, 315, 390};
     int[] yC = {570, 440, 365, 290, 215, 48, 48, 48, 48, 48, 48, 225, 300, 375, 450, 588, 588, 588, 588, 588};
-    int[] prices = {0, 100, 120, 0, 150, 0, 200, 220, 0, 250, 0, 300, 320, 0, 350, 0, 400, 420, 0, 500};
-    int[] owner = {5, 0, 0, 5, 0, 5, 0, 0, 5, 0, 5, 0, 0, 5, 0, 5, 0, 0, 5, 0};
-    int[] rent = {0, 50, 60, 0, 75, 0, 100, 110, 0, 125, 0, 150, 160, 0, 175, 0, 200, 210, 0, 250};
-    int[] balance = {750, 750, 750, 750};
+    int[] prices = {0, 100, 120, 0, 150, 0, 200, 220, 0, 250, 0, 300, 320, 0, 350, 0, 400, 420, 0, 500};        //intialize prices of each property
+    int[] owner = {5, 0, 0, 5, 0, 5, 0, 0, 5, 0, 5, 0, 0, 5, 0, 5, 0, 0, 5, 0}; //0 is unowned property, 5 is game element
+    int[] rent = {0, 50, 60, 0, 75, 0, 100, 110, 0, 125, 0, 150, 160, 0, 175, 0, 200, 210, 0, 250};     //intialize rent values
+    int[] balance = {750, 750, 750, 750};                                            //balance for players 1,2,3,4
+    int[] numHouses = new int[20];
+    boolean[] status = new boolean[4];                        //bankrupcy status for each player
     String[] tileName = {"Start", "Pluto", "Hoth", "Community Chest", "Titan", "Jail", "Tatooine", "Naboo", "Chance", "Neptune", "Free Refuel", "Uranus", "Xena", "Community Chest", "Mars", "Go to Jail", "Jupiter", "Venus", "Chance", "Earth"};
-
+    String[] propertiesOwned = {"", "", "", ""};    //make a string value to print for the amount of properties owned per player
+    
+    
     /**
      * Creates new form Game
      */
     public Game() {
         initComponents();
         g = gamePanel.getGraphics();
+        t = new Timer(50, new TimerListener());
+        t.start();
         //draw board
         board.setIcon(new javax.swing.ImageIcon(getClass().getResource("board.png")));
-
+        
     }
 
     /**
@@ -62,9 +75,13 @@ public class Game extends javax.swing.JFrame {
         turnStatus = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
         tileDisplay = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
+        jLabel7 = new javax.swing.JLabel();
+        endBtn = new javax.swing.JButton();
+        houseBtn = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setPreferredSize(new java.awt.Dimension(670, 670));
 
         gamePanel.setPreferredSize(new java.awt.Dimension(670, 670));
         gamePanel.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -96,6 +113,26 @@ public class Game extends javax.swing.JFrame {
 
         tileDisplay.setText("tileDisplay");
 
+        jLabel5.setText("Player ");
+
+        jLabel6.setText("Balance");
+
+        jLabel7.setText("Properties Owned");
+
+        endBtn.setText("End turn");
+        endBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                endBtnActionPerformed(evt);
+            }
+        });
+
+        houseBtn.setText("Buy House");
+        houseBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                houseBtnActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout gamePanelLayout = new javax.swing.GroupLayout(gamePanel);
         gamePanel.setLayout(gamePanelLayout);
         gamePanelLayout.setHorizontalGroup(
@@ -107,42 +144,69 @@ public class Game extends javax.swing.JFrame {
                         .addGap(29, 29, 29)
                         .addComponent(dieLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
-                        .addComponent(turn)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(turnStatus)
-                        .addGap(60, 60, 60)
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(tileDisplay)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(dieBtn)))
-                .addContainerGap(380, Short.MAX_VALUE))
+                        .addGroup(gamePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(gamePanelLayout.createSequentialGroup()
+                                .addComponent(turn)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(turnStatus)
+                                .addGap(60, 60, 60)
+                                .addComponent(jLabel1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(tileDisplay)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(dieBtn))
+                            .addGroup(gamePanelLayout.createSequentialGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addComponent(houseBtn)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(endBtn)))))
+                .addGap(18, 18, 18)
+                .addComponent(jLabel5)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabel6)
+                .addGap(18, 18, 18)
+                .addComponent(jLabel7)
+                .addContainerGap(678, Short.MAX_VALUE))
         );
         gamePanelLayout.setVerticalGroup(
             gamePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(gamePanelLayout.createSequentialGroup()
-                .addComponent(board, javax.swing.GroupLayout.PREFERRED_SIZE, 620, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(gamePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(board, javax.swing.GroupLayout.PREFERRED_SIZE, 620, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(gamePanelLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(gamePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel5)
+                            .addComponent(jLabel6)
+                            .addComponent(jLabel7))))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(gamePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(dieLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(gamePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(dieBtn)
-                        .addComponent(turn)
-                        .addComponent(turnStatus)
-                        .addComponent(jLabel1)
-                        .addComponent(tileDisplay)))
-                .addContainerGap(42, Short.MAX_VALUE))
+                    .addGroup(gamePanelLayout.createSequentialGroup()
+                        .addGroup(gamePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(dieBtn)
+                            .addComponent(turn)
+                            .addComponent(turnStatus)
+                            .addComponent(jLabel1)
+                            .addComponent(tileDisplay))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(gamePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(endBtn)
+                            .addComponent(houseBtn))))
+                .addContainerGap(74, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(gamePanel, javax.swing.GroupLayout.DEFAULT_SIZE, 1000, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(gamePanel, javax.swing.GroupLayout.PREFERRED_SIZE, 1500, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(gamePanel, javax.swing.GroupLayout.DEFAULT_SIZE, 768, Short.MAX_VALUE)
+            .addComponent(gamePanel, javax.swing.GroupLayout.DEFAULT_SIZE, 800, Short.MAX_VALUE)
         );
 
         pack();
@@ -153,96 +217,152 @@ public class Game extends javax.swing.JFrame {
     }//GEN-LAST:event_gamePanelMouseEntered
 
     private void dieBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dieBtnActionPerformed
-        int dieValue;
-        turnStatus.setText("Player " + curPlayer);
         switch (curPlayer) {                //move players
-
             case 1:
                 g.setColor(Color.white);
                 g.fillOval(xC[curPos[0]], yC[curPos[0]], 10, 10); //erase player 1
 
-                dieValue = (int) (Math.random() * 6) + 1;       //generate random val from 1 to 6
-
-                showDie(dieValue);              //show die value
-                curPos[0] += dieValue;           //change player1's position
-
+                rollDie(0);              //roll die and show its value
                 if (curPos[0] > 19) {            //if the player's position exceeds position 19 (last pos)
-                    curPos[0] -= 20;            //subtract 20 (position 20 = position 1, which in the array is 19 = 0)
+                    passedGo(0);
                 }
-                displayName(curPos[0]);
-
+                displayName(curPos[0]);         //display title name
                 g.setColor(Color.blue); //draw player 1
                 g.fillOval(xC[curPos[0]], yC[curPos[0]], 10, 10);
+                landedProperty(0, curPos[0]);           //landed on property, buys, pays rent
                 
-                curPlayer = 2;                  //next player's turn
+                
                 break;
 
             case 2: //10 pixel offset
                 g.setColor(Color.white);
                 g.fillOval(xC[curPos[1]] + 8, yC[curPos[1]] - 7, 10, 10); //erase player 2
 
-                dieValue = (int) (Math.random() * 6) + 1;
-                showDie(dieValue);
-                curPos[1] += dieValue;
+                rollDie(1);         //roll die and show value
                 if (curPos[1] > 19) {
-                    curPos[1] -= 20;
+                    passedGo(1);
                 }
                 displayName(curPos[1]);
                 g.setColor(Color.red); //draw player 2
                 g.fillOval(xC[curPos[1]] + 8, yC[curPos[1]] - 7, 10, 10);
+                landedProperty(1, curPos[1]);
 
-                //go to next player
-                if (totalPlayers >= 3) {
-                    curPlayer = 3;
-                } else {
-                    curPlayer = 1;
-                }
+                
                 break;
 
             case 3: //20 pixel offset
                 g.setColor(Color.white);
                 g.fillOval(xC[curPos[2]] + 18, yC[curPos[2]] - 17, 10, 10); //erase player 2
 
-                dieValue = (int) (Math.random() * 6) + 1;
-                showDie(dieValue);
-                curPos[2] += dieValue;
+                rollDie(2);     //roll die and show value
                 if (curPos[2] > 19) {
-                    curPos[2] -= 20;
+                    passedGo(2);
                 }
                 displayName(curPos[2]);
                 g.setColor(Color.green); //draw player 3
                 g.fillOval(xC[curPos[2]] + 18, yC[curPos[2]] - 17, 10, 10);
-                if (totalPlayers >= 4) {
-                    curPlayer = 4;
-                } else {
-                    curPlayer = 1;
-                }
+                landedProperty(2, curPos[2]);
                 break;
 
             case 4://30 pixel offset
                 g.setColor(Color.white);
                 g.fillOval(xC[curPos[3]] + 28, yC[curPos[3]] - 27, 10, 10); //erase player 4
 
-                dieValue = (int) (Math.random() * 6) + 1;
-                showDie(dieValue);
-                curPos[3] += dieValue;
+                rollDie(3);     //roll die and show value00000000000
                 if (curPos[3] > 19) {
-                    curPos[3] -= 20;
+                    passedGo(3);
                 }
                 displayName(curPos[3]);
                 g.setColor(Color.orange); //draw player 4
                 g.fillOval(xC[curPos[3]] + 28, yC[curPos[3]] - 27, 10, 10); //draw player 4
+                landedProperty(3, curPos[3]);                               //landed on a property 
 
-                curPlayer = 1;
+                
 
                 break;
-
+                
         }
+        dieBtn.setVisible(false);
+        drawTable(); //update table
     }//GEN-LAST:event_dieBtnActionPerformed
 
     private void boardMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_boardMouseEntered
 
     }//GEN-LAST:event_boardMouseEntered
+
+    private void endBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_endBtnActionPerformed
+        dieBtn.setVisible(true);            //make the roll die option available for next player
+        switch (curPlayer) {                //end turn of players
+            case 1:
+                if(status[1]) {                     //if player 2 is alive
+                    curPlayer = 2;                  //next player's turn
+                } else if (status[2]) {             //if player 3 is alive
+                    curPlayer = 3;
+                } else if (status[3]) {             //if player 4 is alive
+                    curPlayer = 4;
+                } else {
+                    winGame(1);
+                }
+                break;
+                
+            case 2: //10 pixel offset
+            
+                //go to next player
+                if(status[2]) {                         //if player 3 is alive
+                    curPlayer = 3;                  //next player's turn
+                } else if (status[3]) {             //if player 4 is alive
+                    curPlayer = 4;          
+                } else if (status[0]) {             //if player 1i is alive
+                    curPlayer = 1;
+                } else {
+                    winGame(2);
+                }
+                break;
+
+            case 3: //20 pixel offset
+              
+                if(status[3]) {             //if player 4 is alive
+                    curPlayer = 4;                  //next player's turn
+                } else if (status[0]) {     //if player 1 is ailve
+                    curPlayer = 1;
+                } else if (status[1]) {     //elfe is player 2 is alive
+                    curPlayer = 2;
+                } else {
+                    winGame(3);
+                }
+                break;
+
+            case 4://30 pixel offset
+             
+                if(status[0] == true) {             //
+                    curPlayer = 1;                  //next player's turn
+                } else if (status[1] == true) {
+                    curPlayer = 2;
+                } else if (status[2] == true) {
+                    curPlayer = 3;
+                } else {
+                    winGame(4);
+                }
+
+                break;
+        }
+        turnStatus.setText("Player " + curPlayer);      //display next player turn
+        JOptionPane.showMessageDialog(null, "It is now player " + curPlayer + "'s turn");
+    }//GEN-LAST:event_endBtnActionPerformed
+
+    private void houseBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_houseBtnActionPerformed
+        String name = JOptionPane.showInputDialog("Enter the title of the property: ");
+        int i = Arrays.asList(tileName).indexOf(name);          //index of property 
+        if(owner[i] == curPlayer) {                             //if the property entered is owned by the current player
+            int bought = Integer.parseInt(JOptionPane.showInputDialog("Enter number of houses to buy: "));
+            int cost = 50 * bought;         //each house is 50
+            balance[curPlayer] -= cost;
+            numHouses[i] += bought;
+            drawTable();
+        } else {
+            JOptionPane.showMessageDialog(null, "This property is not yours! ");
+        }
+    }//GEN-LAST:event_houseBtnActionPerformed
 
     /**
      * @param args the command line arguments
@@ -277,20 +397,191 @@ public class Game extends javax.swing.JFrame {
                 new Game().setVisible(true);
             }
         });
-
     }
-    public void displayName(int curPos) {
+    public void displayName(int curPos) {               //display name of the tile that the player is on
         tileDisplay.setText(tileName[curPos]);
     }
     
+    //player lands on something
+    public void landedProperty(int curPlayer, int curPos) {     //takes in curPlayer as value from 0-3, curPos from 0-19
+        int playerNumber = curPlayer + 1;               //actual player number is 1 greater than 0-3
+        if(owner[curPos] == 0) {                        //if the property is unowned and is not a game element
+            int input = JOptionPane.showConfirmDialog(null, "Property is unowned. Buy?" + " The cost is $" + prices[curPos]);
+            if (input == 0) {                           //player responds yes
+                balance[curPlayer] -= prices[curPos];         //subtract price of property from balance of player
+                owner[curPos] = playerNumber;                      //set the owner of that property to the player number
+                propertiesOwned[curPlayer] += tileName[curPos] + " ";        //add property name to list of owned properties
+            }
+        } else if (playerNumber != owner[curPos] && owner[curPos] != 5) {    //if property is owned by someone else and if its not a game element
+            JOptionPane.showMessageDialog(null, "Player " + playerNumber + " has paid $" + rent[curPos] + " in rent to Player " + owner[curPos]);
+            balance[curPlayer] -= rent[curPos] * (1 + (0.25 * numHouses[curPos]));                   //subtract rent from balance of player
+            balance[owner[curPos] - 1] += rent[curPos] * (1 + (0.25 * numHouses[curPos]));             //add rent to balance of owner 
+            
+        } else if (tileName[curPos].equals("Chance")) {         //player lands on chance
+            chance(curPlayer);
+        } else if (tileName[curPos].equals("Community Chest")) {    //player lands on community chest
+            communityChest(curPlayer);
+        } else if (tileName[curPos].equals("Go to Jail")) {
+            
+        }
+        if(balance[curPlayer] <= 0) {                         //if player is bankrupt
+            JOptionPane.showMessageDialog(null, "Player " + (curPlayer + 1) + " has gone bankrupt!");
+            status[curPlayer] = false;              //player is out of the game
+        }
+    }
     
-    public void landedProperty(int curPlayer, int curPos) {
-        int playerIndex = curPlayer -1;
-        if(owner[curPos] == 0) {
+    public void passedGo(int curPlayer) {
+        curPos[curPlayer] -= 20;            //subtract 20 (position 20 = position 1, which in the array is 19 = 0)
+        balance[curPlayer] += 200;
+        JOptionPane.showMessageDialog(null, "Player " + (curPlayer + 1) + " has passed GO! Collect 200$");
+    }
+    public void chance(int curPlayer) {                     //curPlayer as int from 0-3
+        int random = (int)(Math.random()  * 6) + 1;         //generate random number from 1 to 6
+        switch(random) {
+            case 1:
+                JOptionPane.showMessageDialog(null, "It's your birthday! Everybody pays you 10$", "Chance", JOptionPane.INFORMATION_MESSAGE);
+                balance[curPlayer] += 10 * totalPlayers;            //add money to player's balance
+                for(int i = 0; i < totalPlayers; i++) {                        //subtract money from everybody's balance
+                    balance[i] -= 10;
+                }
+                break;
+            case 2:
+                JOptionPane.showMessageDialog(null, "You stumble upon rare galactic crystals. Collect 100$", "Chance", JOptionPane.INFORMATION_MESSAGE);
+                balance[curPlayer] += 100;
+                break;
+            case 3:
+                JOptionPane.showMessageDialog(null, "You land on an abandoned plant and aliens infest and kill your crew. Lose 100$", "Chance", JOptionPane.INFORMATION_MESSAGE);
+                balance[curPlayer] -= 100;
+                break;
+            case 4: 
+                JOptionPane.showMessageDialog(null, "The Minecraft Gods reward you. Collect 200$", "Chance", JOptionPane.INFORMATION_MESSAGE);
+                balance[curPlayer] += 200;
+                break;
+            case 5: 
+                JOptionPane.showMessageDialog(null, "OH NO! You've been robbed by space pirates. Lose 50$", "Chance", JOptionPane.INFORMATION_MESSAGE);
+                balance[curPlayer] -= 50;
+                break;
+            case 6: 
+                JOptionPane.showMessageDialog(null, "You stumble across an empty energy plant. Collect 50$", "Chance", JOptionPane.INFORMATION_MESSAGE);
+                balance[curPlayer] += 50;
+                break;
             
         }
     }
-
+    
+    public void communityChest(int curPlayer) {              //curPlayer as value between 0-3
+        int random = (int)(Math.random()  * 6) + 1;         //generate random number from 1 to 6
+        switch(random) {
+            case 1:
+                JOptionPane.showMessageDialog(null, "You find a space gun that allows you to raid other planets! Collect 150$" , "Community Chest", JOptionPane.INFORMATION_MESSAGE);
+                balance[curPlayer] += 150;
+                break;
+            case 2:
+                JOptionPane.showMessageDialog(null, "You stumble across an empty planet. Collect 50$", "Community Chest", JOptionPane.INFORMATION_MESSAGE);
+                balance[curPlayer] += 50;
+                break;
+            case 3:
+                JOptionPane.showMessageDialog(null, "You find yourself caught in an asteroid field! Damages cost you 250$.", "Community Chest", JOptionPane.INFORMATION_MESSAGE);
+                balance[curPlayer] -= 250;
+                break;
+            case 4: 
+                JOptionPane.showMessageDialog(null, "The Empire is collecting taxes. Pay 50$.", "Community Chest", JOptionPane.INFORMATION_MESSAGE);
+                balance[curPlayer] -= 50;
+                break;
+            case 5: 
+                JOptionPane.showMessageDialog(null, "One of your galactic slaves dies. The replace cost is 25$", "Community Chest", JOptionPane.INFORMATION_MESSAGE);
+                balance[curPlayer] -= 25;
+                break;
+            case 6: 
+                JOptionPane.showMessageDialog(null, "Your owes catch up to you. Pay every other player 20$", "Community Chest", JOptionPane.INFORMATION_MESSAGE);
+                balance[curPlayer] -= totalPlayers * 20;            //subtract amount from player's balance
+                for(int i = 0; i < totalPlayers; i++) {             //add money to everyone's balance
+                    balance[i] += 20; 
+                }
+                break;
+            
+        }
+    }
+    public void toJail(int curPlayer) {         //take current player as value from 0-3
+        JOptionPane.showMessageDialog(null, "Player " + (curPlayer + 1) + " has gone to jail!");
+        curPos[curPlayer] = 6;      //move player to position 6
+        switch(curPlayer) {
+            case 0:         //player 1
+                g.setColor(Color.white);
+                g.fillOval(xC[curPos[0]], yC[curPos[0]], 10, 10); //erase player 1
+                
+                g.setColor(Color.blue);
+                g.fillOval(xC[curPos[0]], yC[curPos[0]], 10, 10);
+                break;
+            case 1:                 //player 2
+                g.setColor(Color.white);
+                g.fillOval(xC[curPos[1]] + 8, yC[curPos[1]] - 7, 10, 10); //erase player 2
+                
+                g.setColor(Color.red); //draw player 2
+                g.fillOval(xC[curPos[1]] + 8, yC[curPos[1]] - 7, 10, 10);
+                break;
+            case 2:
+                g.setColor(Color.white);
+                g.fillOval(xC[curPos[2]] + 18, yC[curPos[2]] - 17, 10, 10); //erase player 3
+                g.setColor(Color.green); 
+                g.fillOval(xC[curPos[2]] + 18, yC[curPos[2]] - 17, 10, 10); //draw player 3
+                break;
+            case 3:
+                g.setColor(Color.white);
+                g.fillOval(xC[curPos[3]] + 28, yC[curPos[3]] - 27, 10, 10); //erase player 4
+                g.setColor(Color.orange); //draw player 4
+                g.fillOval(xC[curPos[3]] + 28, yC[curPos[3]] - 27, 10, 10); //draw player 4
+                break;
+        }
+        
+    }
+    
+    public void drawTable() {
+        
+        int drawX = 630;
+        int drawY = 50;
+        g.setColor(Color.white);                //draw table
+        g.fillRect(drawX, drawY - 10, 500, 600);
+        g.setColor(Color.black);
+        for(int i = 0; i < totalPlayers; i++) {
+            g.drawString("Player " + (i + 1), drawX, drawY);  //print out player name           
+            g.drawString(String.valueOf(balance[i]) + "$", drawX + 60, drawY); //print out balance
+            g.drawString(propertiesOwned[i], drawX + 120, drawY);           //print out list of owned properties
+            drawY += 25;
+        }
+        drawY = 200;
+        //print column titles
+        g.drawString("Property", drawX, drawY);
+        g.drawString("Price", drawX + 60, drawY);
+        g.drawString("Rent", drawX + 120, drawY);
+        g.drawString("Owned by", drawX + 180, drawY);
+        g.drawString("Number of Houses", drawX + 300, drawY);
+        drawY = 225;
+        for(int i = 0; i < tileName.length; i++) {      //scan through all properties
+            if(prices[i] > 0) {         //if it is a property
+                g.drawString(tileName[i], drawX, drawY);            //draw property name
+                g.drawString(String.valueOf(prices[i]), drawX + 60, drawY);     //draw property price
+                g.drawString(String.valueOf(rent[i]), drawX + 120, drawY);      //property rent
+                g.drawString("Owned by Player " + owner[i], drawX + 180, drawY);        //property owner
+                g.drawString(String.valueOf(numHouses[i]), drawX + 300, drawY);     //print number of houses
+                
+                drawY += 25;
+            }
+        
+    }
+    }
+    
+    public void winGame(int curPlayer) {
+        JOptionPane.showMessageDialog(null, "Player " + curPlayer + " Has won! Please close the program");
+    }
+    
+    public void rollDie(int curPlayer) {                //take input as value from 0-3 for player numbers 1 to 4
+        int dieValue = (int) (Math.random() * 6) + 1;       //generate random val from 1 to 6
+        curPos[curPlayer] += dieValue;           //change player's position        
+        showDie(dieValue);              //show die value
+    }
+    
+    
     public void showDie(int dieValue) {
         switch (dieValue) {
             case 1:
@@ -313,14 +604,37 @@ public class Game extends javax.swing.JFrame {
                 break;
         }
     }
+    
+    
+    
+    private class TimerListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent ae) {
+            totalPlayers = Integer.parseInt(JOptionPane.showInputDialog("Enter num of players 2-4", ""));           //take in number of players
+            for(int i = 0; i < totalPlayers; i++) {             //initialize status of players 
+                status[i] = true;
+            }
+            displayName(curPos[0]);
+            turnStatus.setText("Player " + curPlayer);      //display next player turn
+            drawTable();// draws table
+            t.stop(); // immediately stop the timer so it will only run once
+        }
+    }
+    
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel board;
     private javax.swing.JButton dieBtn;
     private javax.swing.JLabel dieLabel;
+    private javax.swing.JButton endBtn;
     private javax.swing.JPanel gamePanel;
+    private javax.swing.JButton houseBtn;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel tileDisplay;
     private javax.swing.JLabel turn;
     private javax.swing.JLabel turnStatus;
